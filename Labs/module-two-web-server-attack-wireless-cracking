@@ -1,0 +1,65 @@
+# Module Two Labs: Web Server Attack & Wireless Protocol Cracking
+**CYB-240 | Application Security**
+
+## Lab 1: Attacking Web Servers from the WAN
+
+**Objective:** Perform a live web server attack — altering website content and covering tracks by manipulating log files — then analyze defensive controls.
+
+### Attack Steps Performed
+- Gained unauthorized access to a web server from the WAN
+- Altered website content (defacement simulation: "Hacked Web Server — Livia Ward")
+- Attempted to cover tracks by deleting entries from the `access.log` file
+
+### Defensive Analysis
+
+**Key question: What controls could detect unauthorized log modifications? What security measures would help secure the web server?**
+
+**Detecting log tampering:**
+
+| Control | How It Helps |
+|---|---|
+| **File Integrity Monitoring (FIM)** | Tools like Tripwire or AIDE create cryptographic hashes of critical files (including logs). Any modification — even a single deleted line — triggers an alert |
+| **System-level audit logging** | OS-level audit logs (auditd on Linux) record every file access and modification independently of the application log — attackers cannot cover tracks by editing only the web server log |
+| **Centralized log shipping** | Send logs to a remote SIEM in real time — by the time an attacker deletes local logs, the entries already exist on the remote server |
+| **Write-once/append-only log storage** | Configure log storage so entries can only be appended, never deleted or modified |
+
+**Additional web server security measures:**
+- **Web Application Firewall (WAF):** Blocks common attack patterns (SQLi, XSS, path traversal) before they reach the application
+- **Patch management:** Keep web server software and OS fully patched to eliminate known exploit vectors
+- **Intrusion Detection System (IDS):** Provides real-time alerts on suspicious network behavior and attack signatures
+- **Principle of Least Privilege:** Web server process should run with minimal OS permissions — limiting damage if compromised
+- **Disable directory listing:** Prevents attackers from enumerating server file structure
+
+---
+
+## Lab 2: Breaking WEP and WPA Encryption
+
+**Objective:** Crack WEP and WPA wireless encryption and decrypt captured traffic to understand wireless security weaknesses.
+
+### WEP Cracking
+- Captured wireless traffic using aircrack-ng suite
+- Collected sufficient IVs (Initialization Vectors) to perform statistical analysis
+- Cracked the WEP key (saved as: `WEP-WARD`)
+- Decrypted captured traffic using the recovered key
+
+**Why WEP is broken:**
+WEP uses RC4 encryption with short, static IVs that repeat frequently. Statistical analysis of enough captured packets reveals the key — regardless of its length. WEP has been cryptographically broken since 2001 and should **never** be used.
+
+### WPA Cracking
+- Captured the WPA 4-way handshake
+- Performed dictionary/brute-force attack against the handshake
+- Successfully cracked a weak passphrase
+
+**WPA security vs. WEP:**
+WPA/WPA2 is significantly stronger than WEP — but weak passphrases remain a critical vulnerability. A dictionary attack against a common word passphrase succeeds quickly. **Mitigation:** Use WPA3 where available; require passphrases of 16+ characters with no dictionary words.
+
+### Wireless Security Best Practices
+| Standard | Recommendation |
+|---|---|
+| WEP | ❌ Never use — completely broken |
+| WPA | ⚠️ Deprecated — upgrade to WPA2/WPA3 |
+| WPA2 | ✅ Acceptable with strong (16+ char) passphrase |
+| WPA3 | ✅ Best current standard |
+
+## Skills Demonstrated
+`Web Server Attack Methodology` `Log Manipulation` `File Integrity Monitoring` `WAF` `Centralized Logging` `SIEM` `WEP Cracking` `WPA Cracking` `aircrack-ng` `Wireless Security` `Traffic Decryption`
