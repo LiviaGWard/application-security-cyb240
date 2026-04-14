@@ -1,0 +1,110 @@
+# Project Two: Recommendations Report — Secure Development
+**CYB-240 | Application Security | Grade: A**
+
+## Scenario
+A financial services company is developing a new web application with the following architecture:
+- Client-side scripting for login/authentication
+- Apache Tomcat server exposed to the internet
+- PHP handling database transactions with PostgreSQL
+- XML metadata for data exchange
+- Unencrypted transaction communication
+
+Two critical vulnerabilities were identified in this development environment requiring immediate remediation before deployment.
+
+---
+
+## Vulnerability 1: Broken Access Control
+
+### Risk Summary
+Broken Access Control is one of the most exploited vulnerabilities in web applications (OWASP #1, 2021). In this environment, the system relies on **client-side scripting for authentication** and communicates with Apache Tomcat over the internet — creating multiple points where an attacker could bypass or manipulate access restrictions.
+
+**Potential impact:**
+- Unauthorized viewing or modification of customer financial records
+- Misuse of administrative functions by regular users
+- Privilege escalation via manipulated client requests
+- Data integrity loss across the platform
+
+### Root Cause
+Client-side access control enforcement is fundamentally insecure. Anything processed on the client can be intercepted, modified, or bypassed — attackers can manipulate browser requests, alter JavaScript logic, or directly call server endpoints with elevated permissions.
+
+### Recommendation: Server-Side Access Control + Secure by Default
+
+**Design principles applied:**
+- **Secure by Default** (OWASP Proactive Control C5): Access to all sensitive resources defaults to *denied* unless explicitly granted. This "default deny" posture means misconfiguration results in blocking, not exposure.
+- **Implement Access Control** (OWASP Proactive Control C1): Clearly define what each user role is authorized to do, and enforce those rules consistently on the **server side** at every request.
+
+**Implementation steps:**
+1. Move all authorization logic to the server — never trust client-reported permissions
+2. Define role-based permissions explicitly for every resource and action
+3. Enforce access checks on every API call and page request, not just at login
+4. Return generic error messages for unauthorized access attempts (avoid revealing what exists)
+5. Log all access control failures for security monitoring
+
+---
+
+## Vulnerability 2: Injection Attacks (SQL & XML)
+
+### Risk Summary
+The system's PHP-to-PostgreSQL architecture, combined with weak XML metadata handling and unencrypted transactions, creates significant injection vulnerability. OWASP identifies injection as one of the most severe and widespread flaws (2021).
+
+**Attack vectors:**
+- SQL injection through PHP query parameters — attackers manipulate database queries to expose or alter financial data
+- XML injection through metadata fields — malformed XML payloads can manipulate application logic
+- Man-in-the-middle attacks on unencrypted transactions — attackers intercept and modify data in transit
+
+**Potential impact:**
+- Fraudulent financial transactions
+- Database exposure — all customer records accessible
+- Data corruption
+- Complete backend system compromise
+
+### Recommendation: Complete Mediation + Input Validation + TLS
+
+**Design principles applied:**
+- **Complete Mediation** (Saltzer & Schroeder, 1975): Every request to the server, regardless of source, must be validated against expected parameters before processing. No exceptions, no trusted shortcuts.
+
+**Implementation steps:**
+
+**Input Validation:**
+- Implement strict whitelist-based input validation — only expected characters and formats are accepted; everything else is rejected
+- Never concatenate user input directly into SQL queries
+
+**Prepared Statements / Parameterized Queries:**
+```php
+// VULNERABLE — Never do this:
+$query = "SELECT * FROM accounts WHERE user = '" . $_POST['user'] . "'";
+
+// SECURE — Always use prepared statements:
+$stmt = $pdo->prepare("SELECT * FROM accounts WHERE user = ?");
+$stmt->execute([$_POST['user']]);
+```
+
+**Output Encoding:**
+- Encode all output to prevent reflected injection and XSS vectors
+
+**TLS Encryption:**
+- Replace all unencrypted transaction communication with TLS (minimum TLS 1.2, prefer TLS 1.3)
+- Implement certificate validation; reject invalid or self-signed certificates in production
+
+**XML Security:**
+- Disable external entity processing (XXE) in the XML parser
+- Validate all XML input against a strict schema before processing
+
+---
+
+## Summary of Recommendations
+
+| Vulnerability | Principle | Key Fix |
+|---|---|---|
+| Broken Access Control | Secure by Default, Implement Access Control | Server-side enforcement; default deny; role-based permissions |
+| Injection (SQL/XML) | Complete Mediation | Prepared statements; whitelist input validation; TLS; XML schema validation |
+
+---
+
+## References
+- OWASP. (2021). OWASP Top Ten. https://owasp.org/www-project-top-ten/
+- OWASP. (n.d.). OWASP Top Ten Proactive Controls. https://owasp.org/www-project-proactive-controls/
+- Saltzer, J. H., & Schroeder, M. D. (1975). The protection of information in computer systems.
+
+## Skills Demonstrated
+`OWASP Top 10` `Broken Access Control` `SQL Injection Mitigation` `Prepared Statements` `Input Validation` `TLS/Encryption` `XML Security (XXE)` `Secure by Default` `Complete Mediation` `Secure SDLC` `Security Recommendation Writing` `Financial Application Security`
